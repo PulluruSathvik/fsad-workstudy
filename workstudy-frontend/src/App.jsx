@@ -1,5 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import Navbar from "./components/Navbar";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -9,9 +8,7 @@ import Admin from "./pages/AdminDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 
 /* ================= PROTECTED ROUTE ================= */
-
 function Protected({ children, role }) {
-
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
   if (!user) return <Navigate to="/login" replace />;
@@ -23,30 +20,11 @@ function Protected({ children, role }) {
   return children;
 }
 
-/* ================= LAYOUT ================= */
-
-function Layout({ children }) {
-
-  const loc = useLocation();
-  const hide = loc.pathname === "/login" || loc.pathname === "/register";
-
-  return (
-    <>
-      {!hide && <Navbar />}
-      <div className="container">{children}</div>
-    </>
-  );
-}
-
 /* ================= MAIN APP ================= */
-
 export default function App() {
-
   return (
     <BrowserRouter>
-
       <Routes>
-
         {/* Landing */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 
@@ -54,14 +32,12 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* STUDENT */}
+        {/* STUDENT - No 'Layout' wrapper, the dashboard handles its own UI */}
         <Route
           path="/student"
           element={
             <Protected role="student">
-              <Layout>
-                <StudentDashboard />
-              </Layout>
+              <StudentDashboard />
             </Protected>
           }
         />
@@ -70,9 +46,7 @@ export default function App() {
           path="/jobs"
           element={
             <Protected role="student">
-              <Layout>
-                <Jobs />
-              </Layout>
+              <Jobs />
             </Protected>
           }
         />
@@ -81,9 +55,7 @@ export default function App() {
           path="/hours"
           element={
             <Protected role="student">
-              <Layout>
-                <Hours />
-              </Layout>
+              <Hours />
             </Protected>
           }
         />
@@ -93,18 +65,14 @@ export default function App() {
           path="/admin"
           element={
             <Protected role="admin">
-              <Layout>
-                <Admin />
-              </Layout>
+              <Admin />
             </Protected>
           }
         />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/login" replace />} />
-
       </Routes>
-
     </BrowserRouter>
   );
 }
