@@ -12,12 +12,14 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
     List<Application> findByStudentId(Long studentId);
 
-    @Modifying
-    @Transactional
+    @org.springframework.data.jpa.repository.Modifying
+    @jakarta.transaction.Transactional
+    @org.springframework.data.jpa.repository.Query("DELETE FROM Application a WHERE a.student.id = :studentId")
     void deleteByStudentId(Long studentId);
 
-    @Modifying
-    @Transactional
+    @org.springframework.data.jpa.repository.Modifying
+    @jakarta.transaction.Transactional
+    @org.springframework.data.jpa.repository.Query("DELETE FROM Application a WHERE a.job.id = :jobId")
     void deleteByJobId(Long jobId);
 
     boolean existsByStudentIdAndJobId(Long studentId, Long jobId);

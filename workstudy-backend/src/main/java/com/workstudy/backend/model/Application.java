@@ -21,6 +21,12 @@ public class Application {
     @Column(name="resume_path")
     private String resumePath;
 
+    @Transient
+    private Integer matchScore;
+
+    @Transient
+    private String missingSkills;
+
     public Long getId() { return id; }
 
     public Student getStudent() { return student; }
@@ -40,4 +46,10 @@ public class Application {
     public void setStatus(String status) { this.status = status; }
 
     public void setResumePath(String resumePath) { this.resumePath = resumePath; }
+
+    public Integer getMatchScore() { return matchScore; }
+    public void setMatchScore(Integer matchScore) { this.matchScore = matchScore; }
+
+    public String getMissingSkills() { return missingSkills; }
+    public void setMissingSkills(String missingSkills) { this.missingSkills = missingSkills; }
 }

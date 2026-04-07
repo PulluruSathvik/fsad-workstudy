@@ -3,14 +3,17 @@ package com.workstudy.backend.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "work_hours")
+@Table(name = "work_hour_records")
 public class WorkHour {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int hours;
+    private Double hours;
+
+    private String status = "PENDING"; // PENDING, APPROVED, PAID
+    private String date;
 
     @ManyToOne
     private Student student;
@@ -22,9 +25,15 @@ public class WorkHour {
         return id;
     }
 
-    public int getHours() {
+    public Double getHours() {
         return hours;
     }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getDate() { return date; }
+    public void setDate(String date) { this.date = date; }
 
     public Student getStudent() {
         return student;
@@ -38,7 +47,7 @@ public class WorkHour {
         this.id = id;
     }
 
-    public void setHours(int hours) {
+    public void setHours(Double hours) {
         this.hours = hours;
     }
 

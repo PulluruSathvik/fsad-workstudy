@@ -1,4 +1,4 @@
-const BASE = "http://localhost:8080/api";
+const BASE = "/api";
 
 /* ================= REGISTER ================= */
 
@@ -28,11 +28,81 @@ export const loginStudent = async (data) => {
   return res.json();
 };
 
+export const oauthLoginStudent = async (data) => {
+  const res = await fetch(`${BASE}/students/oauth-login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+
+  if (!res.ok) throw new Error("OAuth login failed");
+
+  return res.json();
+};
+
+export const verifyMfaStudent = async (data) => {
+  const res = await fetch(`${BASE}/students/verify-mfa`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+
+  if (!res.ok) throw new Error("Invalid MFA code");
+
+  return res.json();
+};
+
+export const sendForgotPasswordOtp = async (data) => {
+  const res = await fetch(`${BASE}/students/forgot-password-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+
+  if (!res.ok) throw new Error("Could not send OTP");
+
+  return res.json();
+};
+
+export const resetPasswordWithOtp = async (data) => {
+  const res = await fetch(`${BASE}/students/reset-password`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+
+  if (!res.ok) throw new Error("Could not verify OTP or reset password");
+
+  return res.json();
+};
+
+export const uploadMasterResume = async (studentId, file) => {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(`${BASE}/students/${studentId}/master-resume`, {
+    method: "POST",
+    body: form
+  });
+  if (!res.ok) throw new Error("Upload failed");
+  return res.json();
+};
+
 /* ================= JOBS ================= */
 
 export const getJobs = async () => {
   const res = await fetch(`${BASE}/jobs`);
   return res.json();
+};
+
+export const getRecommendedJobs = async (studentId) => {
+  try {
+    const res = await fetch(`${BASE}/jobs/recommendations/${studentId}`);
+    if (!res.ok) throw new Error("Recommendations endpoint unavailable");
+    return await res.json();
+  } catch (err) {
+    console.warn("Backend not yet restarted for AI features. Falling back to all jobs:", err);
+    return getJobs();
+  }
 };
 
 export const addJob = async (job) => {
@@ -116,6 +186,18 @@ export const getAllHours = async () => {
   return res.json();
 };
 
+export const approveHours = async (id) => {
+  const res = await fetch(`${BASE}/hours/${id}/approve`, { method: "PUT" });
+  if (!res.ok) throw new Error("Failed to approve hours");
+  return res.json();
+};
+
+export const payHours = async (id) => {
+  const res = await fetch(`${BASE}/hours/${id}/pay`, { method: "POST" });
+  if (!res.ok) throw new Error("Failed to process payment");
+  return res.json();
+};
+
 /* ================= DELETE ACCOUNT ================= */
 
 export const deleteAccount = async(id)=>{
@@ -124,4 +206,10 @@ export const deleteAccount = async(id)=>{
   });
 
   if(!res.ok) throw new Error("Delete failed");
+};
+
+export const getStudents = async () => {
+  const res = await fetch(`${BASE}/students`);
+  if (!res.ok) throw new Error("Failed to fetch students");
+  return res.json();
 };

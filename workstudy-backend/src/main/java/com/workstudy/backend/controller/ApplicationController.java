@@ -18,10 +18,12 @@ import com.workstudy.backend.model.Student;
 import com.workstudy.backend.repository.ApplicationRepository;
 import com.workstudy.backend.repository.JobRepository;
 import com.workstudy.backend.repository.StudentRepository;
+import com.workstudy.backend.service.EmailService;
+import com.workstudy.backend.service.MatchingEngine;
 
 @RestController
 @RequestMapping("/api/applications")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 public class ApplicationController {
 
     @Autowired
@@ -32,6 +34,12 @@ public class ApplicationController {
 
     @Autowired
     private JobRepository jobRepository;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private MatchingEngine matchingEngine;
 
     @PostMapping(value="/apply", consumes="multipart/form-data")
     public Application applyJob(
@@ -64,7 +72,19 @@ public class ApplicationController {
 
     @GetMapping
     public List<Application> getAll(){
-        return applicationRepository.findAll();
+        List<Application> apps = applicationRepository.findAll();
+        for (Application app : apps) {
+            String text = matchingEngine.parsePdfToText(app.getResumePath());
+            MatchingEngine.MatchResult res = matchingEngine.calculateMatch(text, app.getJob().getRequiredSkills());
+            app.setMatchScore(res.score);
+            app.setMissingSkills(res.missingSkills);
+        }
+        apps.sort((a,b) -> {
+            int scoreA = a.getMatchScore() == null ? 0 : a.getMatchScore();
+            int scoreB = b.getMatchScore() == null ? 0 : b.getMatchScore();
+            return Integer.compare(scoreB, scoreA);
+        });
+        return apps;
     }
 
     @GetMapping("/student/{id}")
@@ -76,7 +96,20 @@ public class ApplicationController {
     public Application approve(@PathVariable Long id,@RequestParam String status){
         Application app=applicationRepository.findById(id).orElseThrow();
         app.setStatus(status);
-        return applicationRepository.save(app);
+        Application saved = applicationRepository.save(app);
+        
+        try {
+            emailService.sendStatusUpdateEmail(
+                saved.getStudent().getEmail(), 
+                saved.getStudent().getName(), 
+                saved.getJob().getTitle(), 
+                status
+            );
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+        
+        return saved;
     }
 
     @GetMapping("/resume/{id}")

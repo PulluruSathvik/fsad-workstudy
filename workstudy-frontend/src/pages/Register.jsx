@@ -1,131 +1,114 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
 import { registerStudent } from "../services/api";
-import styles from "./Register.module.css";
+import { useNavigate, Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { Lock, Mail, User, ShieldCheck, ArrowRight, ShieldPlus, Zap } from "lucide-react";
+import styles from './Auth.module.css';
 
-const slideImages = [
-  "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=80",
-  "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1600&q=80",
-  "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1600&q=80"
-];
+import slide1 from '../assets/slide_auth_1.png';
+import slide2 from '../assets/slide_auth_2.png';
+import slide3 from '../assets/slide_auth_3.png';
+
+const slideImages = [slide3, slide1, slide2]; 
 
 export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("student");
+  
   const [loading, setLoading] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const nav = useNavigate();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slideImages.length);
-    }, 5000);
+    const interval = setInterval(() => { setCurrentSlide((prev) => (prev + 1) % slideImages.length); }, 6000);
     return () => clearInterval(interval);
   }, []);
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (!name || !email || !password) return alert("Fill all fields");
+    if (!name || !email || !password) return alert("Incomplete Data Profile");
     setLoading(true);
     try {
-      const res = await registerStudent({ name, email, password, role });
-      localStorage.setItem("user", JSON.stringify(res));
-      nav(res.role === "admin" ? "/admin" : "/student");
-    } catch (err) {
-      alert("Registration failed. Email might already be in use.");
-    } finally {
-      setLoading(false);
-    }
+      await registerStudent({ name, email, password, role });
+      alert("Registration Successful! Please proceed to the Login Portal.");
+      navigate("/login");
+    } catch { alert("Failed to initialize identity."); }
+    finally { setLoading(false); }
+  };
+
+  const formVariants = {
+    hidden: { opacity: 0, x: -30 },
+    visible: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 100, damping: 20, staggerChildren: 0.1 } }
   };
 
   return (
-    <div className={styles.viewport}>
-      {/* Cinematic Background Slider */}
-      <div className={styles.sliderContainer}>
-        {slideImages.map((img, i) => (
-          <div 
-            key={i}
-            className={`${styles.slide} ${i === currentSlide ? styles.active : ""}`}
-            style={{ backgroundImage: `url(${img})` }}
-          />
-        ))}
-        <div className={styles.darkOverlay}></div>
+    <div className={styles.splitViewport}>
+      {/* Right Side: Glassmorphic Form (Swapped sides for register) */}
+      <div className={styles.formSide} style={{ order: 1 }}>
+        <motion.div className={styles.authContainer} initial="hidden" animate="visible" variants={formVariants}>
+          <div className={styles.brandHero}>
+             <motion.div variants={{ hidden: { opacity:0 }, visible: { opacity: 1 } }}>
+               <span className={styles.badge}><ShieldPlus size={14} color="#FF3366"/> NEW IDENTITY</span>
+             </motion.div>
+             <motion.h1 className="text-gradient" variants={{ hidden: { y: 20, opacity:0 }, visible: { y: 0, opacity: 1 } }}>
+               Join Ecosystem
+             </motion.h1>
+             <motion.p className={styles.subtitle} variants={{ hidden: { opacity:0 }, visible: { opacity: 1 } }}>
+               Initialize your profile to gain network access.
+             </motion.p>
+          </div>
+
+          <form onSubmit={handleRegister} className={styles.authForm}>
+            
+            <motion.div className={styles.roleSelector} variants={formVariants}>
+              <button type="button" className={role === "student" ? styles.roleActive : styles.roleBtn} onClick={() => setRole("student")}>
+                <User size={18}/> Student
+              </button>
+              <button type="button" className={role === "admin" ? styles.roleActive : styles.roleBtn} onClick={() => setRole("admin")}>
+                <ShieldCheck size={18}/> Administrator
+              </button>
+            </motion.div>
+
+            <motion.div className={styles.inputGroup} variants={formVariants}>
+              <label><User size={14} /> Full Name</label>
+              <input type="text" placeholder="John Doe" onChange={e => setName(e.target.value)} required />
+            </motion.div>
+
+            <motion.div className={styles.inputGroup} variants={formVariants}>
+              <label><Mail size={14} /> Email</label>
+              <input type="email" placeholder="john@uni.edu" onChange={e => setEmail(e.target.value)} required />
+            </motion.div>
+
+            <motion.div className={styles.inputGroup} variants={formVariants}>
+              <label><Lock size={14} /> Security Passphrase</label>
+              <input type="password" placeholder="••••••••" onChange={e => setPassword(e.target.value)} required />
+            </motion.div>
+
+            <motion.button type="submit" className={styles.submitBtn} variants={formVariants} disabled={loading} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              {loading ? <span className={styles.loader}></span> : <><Zap size={16}/> Deploy Identity <ArrowRight size={16}/></>}
+            </motion.button>
+          </form>
+
+          <motion.p className={styles.switchLink} variants={formVariants}>
+            Already initialized? <Link to="/login">Authenticate Here</Link>
+          </motion.p>
+        </motion.div>
       </div>
 
-      <div className={styles.mainCard}>
-        {/* Left Section: Context & Branding */}
-        <div className={styles.leftBranding}>
-          <span className={styles.tag}>JOIN THE NETWORK</span>
-          <h1 className={styles.title}>
-            Start Your <br/>
-            <span className={styles.highlight}>Journey</span> With Us.
-          </h1>
-          <p className={styles.description}>
-            Access exclusive work-study opportunities and manage your professional growth in one centralized portal.
-          </p>
-          
-          <div className={styles.infoRow}>
-            <div className={styles.infoBox}>
-              <span className={styles.infoIcon}>🛡️</span>
-              <span className={styles.infoText}>Secure Access</span>
-            </div>
-            <div className={styles.infoBox}>
-              <span className={styles.infoIcon}>⚡</span>
-              <span className={styles.infoText}>Instant Setup</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Section: Form Section */}
-        <div className={styles.rightForm}>
-          <div className={styles.glassForm}>
-            <div className={styles.header}>
-              <h2>Register</h2>
-              <p>Choose your role and fill the details</p>
-            </div>
-
-            <div className={styles.rolePicker}>
-              <button
-                type="button"
-                className={role === "student" ? styles.roleActive : styles.roleBtn}
-                onClick={() => setRole("student")}
-              >
-                🎓 Student
-              </button>
-              <button
-                type="button"
-                className={role === "admin" ? styles.roleActive : styles.roleBtn}
-                onClick={() => setRole("admin")}
-              >
-                🧑‍💼 Admin
-              </button>
-            </div>
-
-            <form onSubmit={handleRegister} className={styles.form}>
-              <div className={styles.inputGroup}>
-                <label>Full Name</label>
-                <input placeholder="John Doe" onChange={e => setName(e.target.value)} required />
-              </div>
-              <div className={styles.inputGroup}>
-                <label>Institutional Email</label>
-                <input type="email" placeholder="name@university.edu" onChange={e => setEmail(e.target.value)} required />
-              </div>
-              <div className={styles.inputGroup}>
-                <label>Security Key</label>
-                <input type="password" placeholder="••••••••" onChange={e => setPassword(e.target.value)} required />
-              </div>
-
-              <button className={styles.submitBtn} disabled={loading}>
-                {loading ? "Creating..." : "Create Account →"}
-              </button>
-            </form>
-
-            <p className={styles.loginLink}>
-              Already a member? <Link to="/login">Sign In</Link>
-            </p>
-          </div>
+      {/* Left Side (Actually right visual order because of order:1 above): Carousel */}
+      <div className={styles.carouselSide} style={{ order: 2 }}>
+        <AnimatePresence>
+          <motion.div 
+            key={currentSlide}
+            initial={{ opacity: 0, scale: 1.05 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1.5 }}
+            className={styles.slideBg} style={{ backgroundImage: `url(${slideImages[currentSlide]})` }} 
+          />
+        </AnimatePresence>
+        <div className={styles.carouselOverlay}>
+          <h2>Accelerate your Journey</h2>
+          <p>Gain access to exclusive deployments, track your progress, and build your professional profile.</p>
         </div>
       </div>
     </div>

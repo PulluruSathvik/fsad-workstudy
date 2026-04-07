@@ -1,21 +1,29 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { LayoutDashboard, Briefcase, Clock, LogOut, Sun, Moon } from "lucide-react";
 import "./Navbar.css";
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState("light");
   const [user, setUser] = useState(null);
+  const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") || "dark";
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    
+    // Default to light theme as requested
+    const savedTheme = localStorage.getItem("theme") || "light";
     setTheme(savedTheme);
     document.documentElement.setAttribute("data-theme", savedTheme);
 
     const storedUser = localStorage.getItem("user");
     if (storedUser) setUser(JSON.parse(storedUser));
+    
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -23,15 +31,6 @@ export default function Navbar() {
     if (storedUser) setUser(JSON.parse(storedUser));
     else setUser(null);
   }, [location]);
-
-  const toggleMenu = () => setIsOpen(!isOpen);
-
-  const handleThemeToggle = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
-    document.documentElement.setAttribute("data-theme", newTheme);
-    localStorage.setItem("theme", newTheme);
-  };
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -42,50 +41,58 @@ export default function Navbar() {
   if (!user) return null;
 
   return (
-    <nav className="navbar">
-      <div className="nav-container">
-        <div className="nav-brand">
-          <Link to={user.role === "student" ? "/jobs" : "/admin"} className="nav-logo">
-            {user.role === "student" ? "Student Portal" : "Admin Portal"}
-          </Link>
-        </div>
+    <nav className={`premium-navbar ${isScrolled ? "scrolled" : ""}`}>
+      <div className="nav-container glass-panel">
+        
+        {/* Brand Logo */}
+        <Link to={user.role === "student" ? "/student" : "/admin"} className="nav-brand-orb flex-row gap-2">
+          <div className="gradient-orb anim-pulse"></div>
+          <span className="text-h4 text-gradient" style={{ margin: 0 }}>WorkStudy</span>
+        </Link>
 
-        <ul className="nav-menu active">
-
-          {/* STUDENT MENU */}
+        {/* Dynamic Center Navigation */}
+        <div className="nav-pills flex-row gap-2">
           {user.role === "student" && (
-<>
-<li className="nav-item">
-  <Link to="/jobs" className="nav-link">Jobs</Link>
-</li>
-
-<li className="nav-item">
-  <Link to="/hours" className="nav-link">Hours</Link>
-</li>
-</>
-)}
-
-
-          {/* ADMIN MENU */}
-          {user.role === "admin" && (
             <>
-              <li><Link to="/admin">Dashboard</Link></li>
-              <li><Link to="/admin">Applications</Link></li>
-              <li><Link to="/admin">Students</Link></li>
+              <Link to="/student" className={`nav-pill ${location.pathname === '/student' ? 'active' : ''}`}>
+                {location.pathname === '/student' && <motion.div layoutId="navBubble" className="active-pill-bg" />}
+                <span className="pill-text"><LayoutDashboard size={14}/> Dashboard</span>
+              </Link>
+              <Link to="/jobs" className={`nav-pill ${location.pathname === '/jobs' ? 'active' : ''}`}>
+                 {location.pathname === '/jobs' && <motion.div layoutId="navBubble" className="active-pill-bg" />}
+                 <span className="pill-text"><Briefcase size={14}/> Market</span>
+              </Link>
+              <Link to="/hours" className={`nav-pill ${location.pathname === '/hours' ? 'active' : ''}`}>
+                 {location.pathname === '/hours' && <motion.div layoutId="navBubble" className="active-pill-bg" />}
+                 <span className="pill-text"><Clock size={14}/> Hours</span>
+              </Link>
             </>
           )}
 
-          <li>Hi, {user.name}</li>
+          {user.role === "admin" && (
+            <Link to="/admin" className="nav-pill active">
+              <motion.div layoutId="navBubble" className="active-pill-bg" />
+              <span className="pill-text"><LayoutDashboard size={14}/> Dashboard Overview</span>
+            </Link>
+          )}
+        </div>
 
-          <li>
-            <button className="logout-btn" onClick={handleLogout}>Logout</button>
-          </li>
+        {/* Right Controls */}
+        <div className="nav-controls flex-row gap-4">
+           <div className="nav-user-badge flex-row gap-2">
+             <div className="avatar-mini flex-center text-sm font-bold shadow-sm">
+                {user.name?.charAt(0) || "U"}
+             </div>
+             <span className="text-sm font-bold text-heading name-clip">
+                {user.name?.split(" ")[0]}
+             </span>
+           </div>
 
-        </ul>
+           <button className="nav-icon-btn btn-secondary flex-center" onClick={handleLogout} title="Logout">
+             <LogOut size={16}/>
+           </button>
+        </div>
 
-        <button className="theme-toggle" onClick={handleThemeToggle}>
-          {theme === "dark" ? "☀️" : "🌙"}
-        </button>
       </div>
     </nav>
   );
