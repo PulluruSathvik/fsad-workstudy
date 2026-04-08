@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { loginStudent, oauthLoginStudent, verifyMfaStudent } from "../services/api";
 import { motion, AnimatePresence } from "framer-motion";
@@ -54,9 +55,9 @@ export default function Login() {
   const loginGoogle = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
-        const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        const userInfo = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        }).then(res => res.json());
+        }).then(res => res.data);
         handleOAuthSuccess(userInfo.email, userInfo.name, "GOOGLE");
       } catch (err) {
         console.error("Google Auth Error", err);
